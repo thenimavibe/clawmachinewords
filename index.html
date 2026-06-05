@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WordRunner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    #game-container {
+      position: relative;
+      width: 1280px;
+      height: 720px;
+    }
+    #word-input-overlay {
+      display: none;
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(10, 8, 30, 0.92);
+      z-index: 100;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      font-family: 'Fredoka One', cursive;
+    }
+    #word-input-overlay.visible {
+      display: flex;
+    }
+    #level-theme-label {
+      font-family: 'Fredoka One', cursive;
+      font-size: 32px;
+      color: #FFD700;
+      text-shadow: 0 0 20px rgba(255,215,0,0.6);
+      letter-spacing: 2px;
+    }
+    #overlay-title {
+      font-family: 'Fredoka One', cursive;
+      font-size: 48px;
+      color: #fff;
+      text-shadow: 0 4px 20px rgba(100,200,255,0.5);
+    }
+    #word-field {
+      font-family: 'Fredoka One', cursive;
+      font-size: 36px;
+      width: 420px;
+      padding: 16px 24px;
+      border-radius: 16px;
+      border: 3px solid #6699FF;
+      background: rgba(20, 20, 60, 0.95);
+      color: #fff;
+      text-align: center;
+      letter-spacing: 8px;
+      outline: none;
+      text-transform: uppercase;
+      box-shadow: 0 0 30px rgba(100, 150, 255, 0.3);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #word-field:focus {
+      border-color: #88BBFF;
+      box-shadow: 0 0 40px rgba(100, 150, 255, 0.6);
+    }
+    #word-error {
+      font-family: 'Nunito', sans-serif;
+      font-size: 18px;
+      color: #FF6677;
+      min-height: 24px;
+      font-weight: 700;
+    }
+    #suggestion-label {
+      font-family: 'Nunito', sans-serif;
+      font-size: 18px;
+      color: #aaa;
+    }
+    #suggestion-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 700px;
+    }
+    .suggestion-btn {
+      font-family: 'Fredoka One', cursive;
+      font-size: 20px;
+      padding: 10px 22px;
+      border-radius: 30px;
+      border: 2px solid #4466BB;
+      background: rgba(40, 60, 140, 0.7);
+      color: #CCE0FF;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 2px;
+    }
+    .suggestion-btn:hover {
+      background: rgba(80, 110, 220, 0.9);
+      border-color: #88AAFF;
+      color: #fff;
+      transform: scale(1.06);
+    }
+    #start-level-btn {
+      font-family: 'Fredoka One', cursive;
+      font-size: 28px;
+      padding: 16px 50px;
+      border-radius: 40px;
+      border: none;
+      background: linear-gradient(135deg, #44CC66, #22AA44);
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(50,200,80,0.4);
+      transition: all 0.15s;
+      letter-spacing: 2px;
+      margin-top: 8px;
+    }
+    #start-level-btn:hover {
+      transform: scale(1.07) translateY(-2px);
+      box-shadow: 0 10px 30px rgba(50,200,80,0.6);
+    }
+    #start-level-btn:active {
+      transform: scale(0.97);
+    }
+    #touch-controls {
+      display: none;
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 160px;
+      z-index: 50;
+      pointer-events: none;
+    }
+    .touch-btn {
+      position: absolute;
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      border: 3px solid rgba(255,255,255,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      color: #fff;
+      pointer-events: all;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    #touch-left { bottom: 30px; left: 30px; }
+    #touch-right { bottom: 30px; left: 120px; }
+    #touch-jump { bottom: 30px; right: 30px; }
+    #touch-ability { bottom: 30px; right: 120px; }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="word-input-overlay">
+      <div id="level-theme-label">🌲 Enchanted Forest</div>
+      <div id="overlay-title">Type Your Word!</div>
+      <input type="text" id="word-field" maxlength="10" placeholder="TYPE HERE" autocomplete="off" autocorrect="off" spellcheck="false">
+      <div id="word-error"></div>
+      <div id="suggestion-label">— or pick a word —</div>
+      <div id="suggestion-buttons"></div>
+      <button id="start-level-btn">LET'S GO! ▶</button>
+    </div>
+    <div id="touch-controls">
+      <div class="touch-btn" id="touch-left">◀</div>
+      <div class="touch-btn" id="touch-right">▶</div>
+      <div class="touch-btn" id="touch-jump">▲</div>
+      <div class="touch-btn" id="touch-ability">✨</div>
+    </div>
+  </div>
+
+  <!-- Phaser 3 -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+
+  <!-- Game scripts in dependency order -->
+  <script src="js/config.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/entities/Letter.js"></script>
+  <script src="js/entities/Enemy.js"></script>
+  <script src="js/entities/Player.js"></script>
+  <script src="js/scenes/BootScene.js"></script>
+  <script src="js/scenes/TitleScene.js"></script>
+  <script src="js/scenes/CharSelectScene.js"></script>
+  <script src="js/scenes/LevelMapScene.js"></script>
+  <script src="js/scenes/WordInputScene.js"></script>
+  <script src="js/scenes/UIScene.js"></script>
+  <script src="js/scenes/GameScene.js"></script>
+  <script src="js/scenes/LevelEndScene.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
